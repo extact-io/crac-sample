@@ -24,7 +24,6 @@ public class PersonApplicationMain {
             }
         });
         preventExitThread.start();
-        io.helidon.microprofile.cdi.Main.shutdown();
     }
 
     static class CracEventHandler implements Resource {
