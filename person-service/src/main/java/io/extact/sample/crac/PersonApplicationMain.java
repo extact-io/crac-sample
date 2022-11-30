@@ -24,12 +24,14 @@ public class PersonApplicationMain {
             }
         });
         preventExitThread.start();
+        io.helidon.microprofile.cdi.Main.shutdown();
     }
 
     static class CracEventHandler implements Resource {
         @Override
         public void beforeCheckpoint(Context<? extends Resource> context) throws Exception {
             io.helidon.microprofile.cdi.Main.shutdown();
+            Thread.sleep(3_000);
         }
 
         @Override
