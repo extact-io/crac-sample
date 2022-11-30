@@ -230,9 +230,9 @@ public class ServerCdiExtension implements Extension, Resource {
                 + note + " in " + initializationElapsedTime + " milliseconds (since JVM startup).");
 
         // this is not needed at runtime, collect garbage
-        serverBuilder = null;
-        routingBuilder = null;
-        namedRoutings = null;
+        //serverBuilder = null;
+        //routingBuilder = null;
+        //namedRoutings = null;
 
         STARTUP_LOGGER.finest("Server created");
     }
