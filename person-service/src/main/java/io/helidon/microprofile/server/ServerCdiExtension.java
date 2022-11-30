@@ -143,15 +143,15 @@ System.out.println("@@@ invoke beforeCheckpoint");
         this.config = config;
         System.out.println("@@@@  Resource Regstered");
         Core.getGlobalContext().register(this);
-//        preventExitThread = new Thread(() -> {
-//            while (true) {
-//                try {
-//                    Thread.sleep(1_000_000);
-//                } catch (InterruptedException e) {
-//                }
-//            }
-//        });
-//        preventExitThread.start();
+        preventExitThread = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1_000_000);
+                } catch (InterruptedException e) {
+                }
+            }
+        });
+        preventExitThread.start();
     }
 
     // Priority must ensure that these handlers are added before the MetricsSupport KPI metrics handler.
