@@ -51,6 +51,7 @@ import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.enterprise.inject.spi.Extension;
 import jakarta.enterprise.inject.spi.ProcessManagedBean;
 import jakarta.enterprise.inject.spi.ProcessProducerField;
 import jakarta.enterprise.inject.spi.ProcessProducerMethod;
@@ -81,9 +82,8 @@ import io.helidon.webserver.staticcontent.StaticContentSupport;
 /**
  * Extension to handle web server configuration and lifecycle.
  */
-//public class ServerCdiExtension implements Extension, Resource {
-public class DummyServerCdiExtension implements Resource {
-    private static final Logger LOGGER = Logger.getLogger(DummyServerCdiExtension.class.getName());
+public class ServerCdiExtension implements Extension, Resource {
+    private static final Logger LOGGER = Logger.getLogger(ServerCdiExtension.class.getName());
     private static final Logger STARTUP_LOGGER = Logger.getLogger("io.helidon.microprofile.startup.server");
     private static final AtomicBoolean IN_PROGRESS_OR_RUNNING = new AtomicBoolean();
 
@@ -404,7 +404,7 @@ System.out.println("@@@ invoke beforeCheckpoint");
                     .get();
 
             started = false;
-            jerseySupports.forEach(JerseySupport::close);
+            //jerseySupports.forEach(JerseySupport::close);
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.log(Level.SEVERE, "Failed to stop web server", e);
         } finally {
