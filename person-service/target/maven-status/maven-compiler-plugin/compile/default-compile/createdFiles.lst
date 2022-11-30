@@ -1,5 +1,6 @@
 io\extact\sample\crac\resource\Person.class
 io\extact\sample\crac\PersonApplication.class
-io\helidon\microprofile\server\ServerCdiExtension.class
 io\extact\sample\crac\PersonApplicationMain.class
+io\helidon\microprofile\server\DummyServerCdiExtension.class
+io\extact\sample\crac\PersonApplicationMain$CracEventHandler.class
 io\extact\sample\crac\resource\PersonResource.class
