@@ -113,21 +113,45 @@ public class ServerCdiExtension implements Extension, Resource {
 
     private final Set<Routing.Builder> routingsWithKPIMetrics = new HashSet<>();
 
+    @Override
+    public void afterRestore(org.crac.Context<? extends Resource> context) throws Exception {
+System.out.println("@@@ invoke afterRestore");
+        var startTime = System.currentTimeMillis();
+        webserver = serverBuilder.build();
+        try {
+            webserver.start().toCompletableFuture().get();
+            started = true;
+        } catch (Exception e) {
+            throw new DeploymentException("Failed to start webserver", e);
+        }
+        this.port = webserver.port();
+
+        LOGGER.info(() -> "Server restored in "
+                + (System.currentTimeMillis() - startTime) + " milliseconds (since JVM afterRestore).");
+    }
+
+    @Override
+    public void beforeCheckpoint(org.crac.Context<? extends Resource> context) throws Exception {
+System.out.println("@@@ invoke beforeCheckpoint");
+        this.stopServer(null);
+    }
+
+
     private Thread preventExitThread;
     private void prepareRuntime(@Observes @RuntimeStart Config config) {
         serverBuilder.config(config.get("server"));
         this.config = config;
         System.out.println("@@@@  Resource Regstered");
         Core.getGlobalContext().register(this);
-        preventExitThread = new Thread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(1_000_000);
-                } catch (InterruptedException e) {
-                }
-            }
-        });
-        preventExitThread.start();
+//        preventExitThread = new Thread(() -> {
+//            while (true) {
+//                try {
+//                    Thread.sleep(1_000_000);
+//                } catch (InterruptedException e) {
+//                }
+//            }
+//        });
+//        preventExitThread.start();
     }
 
     // Priority must ensure that these handlers are added before the MetricsSupport KPI metrics handler.
@@ -230,6 +254,7 @@ public class ServerCdiExtension implements Extension, Resource {
                 + note + " in " + initializationElapsedTime + " milliseconds (since JVM startup).");
 
         // this is not needed at runtime, collect garbage
+        // ★
         //serverBuilder = null;
         //routingBuilder = null;
         //namedRoutings = null;
@@ -237,36 +262,6 @@ public class ServerCdiExtension implements Extension, Resource {
         STARTUP_LOGGER.finest("Server created");
     }
 
-    @Override
-    public void afterRestore(org.crac.Context<? extends Resource> context) throws Exception {
-System.out.println("@@@ invoke afterRestore");
-        webserver = serverBuilder.build();
-        try {
-            webserver.start().toCompletableFuture().get();
-            started = true;
-        } catch (Exception e) {
-            throw new DeploymentException("Failed to start webserver", e);
-        }
-
-        this.port = webserver.port();
-
-        long initializationElapsedTime = ManagementFactory.getRuntimeMXBean().getUptime();
-
-        String protocol = "http" + (webserver.hasTls() ? "s" : "");
-        String host = "0.0.0.0".equals(listenHost) ? "localhost" : listenHost;
-        String note = "0.0.0.0".equals(listenHost) ? " (and all other host addresses)" : "";
-
-        LOGGER.info(() -> "Server started on "
-                + protocol + "://" + host + ":" + port
-                + note + " in " + initializationElapsedTime + " milliseconds (since JVM startup).");
-
-        // this is not needed at runtime, collect garbage
-        serverBuilder = null;
-        routingBuilder = null;
-        namedRoutings = null;
-
-        STARTUP_LOGGER.finest("Server created");
-    }
 
     private void registerJaxRsApplications(BeanManager beanManager) {
         JaxRsCdiExtension jaxRs = beanManager.getExtension(JaxRsCdiExtension.class);
@@ -372,13 +367,6 @@ System.out.println("@@@ invoke afterRestore");
         STARTUP_LOGGER.finest("Static classpath");
     }
 
-
-    @Override
-    public void beforeCheckpoint(org.crac.Context<? extends Resource> context) throws Exception {
-System.out.println("@@@ invoke beforeCheckpoint");
-        this.stopServer(null);
-    }
-
     private void stopServer(@Observes @Priority(PLATFORM_BEFORE) @BeforeDestroyed(ApplicationScoped.class) Object event) {
         try {
             if (started) {
@@ -404,6 +392,7 @@ System.out.println("@@@ invoke beforeCheckpoint");
                     .get();
 
             started = false;
+            // ★
             //jerseySupports.forEach(JerseySupport::close);
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.log(Level.SEVERE, "Failed to stop web server", e);
