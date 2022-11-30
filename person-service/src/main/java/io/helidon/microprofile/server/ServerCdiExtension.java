@@ -240,7 +240,7 @@ public class ServerCdiExtension implements Extension, Resource {
     @Override
     public void afterRestore(org.crac.Context<? extends Resource> context) throws Exception {
 System.out.println("@@@ invoke afterRestore");
-new RuntimeException().printStackTrace();
+        webserver = serverBuilder.build();
         try {
             webserver.start().toCompletableFuture().get();
             started = true;
