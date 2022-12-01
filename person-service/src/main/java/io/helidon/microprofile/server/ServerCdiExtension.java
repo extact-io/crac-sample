@@ -113,9 +113,40 @@ public class ServerCdiExtension implements Extension, Resource {
 
     private final Set<Routing.Builder> routingsWithKPIMetrics = new HashSet<>();
 
+
+    // ダミースレッドを保持するフィールドを追加
+    private Thread preventExitThread;
+
+    private void prepareRuntime(@Observes @RuntimeStart Config config) {
+        serverBuilder.config(config.get("server"));
+        this.config = config;
+        // ↓↓Context登録の処理を追加↓↓
+        System.out.println("***** Resource Regstered *****");
+        Core.getGlobalContext().register(this);
+        preventExitThread = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1_000_000);
+                } catch (InterruptedException e) {
+                }
+            }
+        });
+        preventExitThread.start();
+    }
+
+    // Resourceインタフェースの実装を追加
+    @Override
+    public void beforeCheckpoint(org.crac.Context<? extends Resource> context) throws Exception {
+        // 既存のサーバ停止メソッドを使ってサーバ機能のみ停止
+        System.out.println("***** invoke beforeCheckpoint *****");
+        this.stopServer(null);
+    }
+
+    // Resourceインタフェースの実装を追加
     @Override
     public void afterRestore(org.crac.Context<? extends Resource> context) throws Exception {
-System.out.println("@@@ invoke afterRestore");
+        // 既存のサーバ起動処理をコピーして一部改変
+        System.out.println("***** invoke afterRestore *****");
         var startTime = System.currentTimeMillis();
         webserver = serverBuilder.build();
         try {
@@ -128,30 +159,6 @@ System.out.println("@@@ invoke afterRestore");
 
         LOGGER.info(() -> "Server restored in "
                 + (System.currentTimeMillis() - startTime) + " milliseconds (since JVM afterRestore).");
-    }
-
-    @Override
-    public void beforeCheckpoint(org.crac.Context<? extends Resource> context) throws Exception {
-System.out.println("@@@ invoke beforeCheckpoint");
-        this.stopServer(null);
-    }
-
-
-    private Thread preventExitThread;
-    private void prepareRuntime(@Observes @RuntimeStart Config config) {
-        serverBuilder.config(config.get("server"));
-        this.config = config;
-        System.out.println("@@@@  Resource Regstered");
-        Core.getGlobalContext().register(this);
-        preventExitThread = new Thread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(1_000_000);
-                } catch (InterruptedException e) {
-                }
-            }
-        });
-        preventExitThread.start();
     }
 
     // Priority must ensure that these handlers are added before the MetricsSupport KPI metrics handler.
@@ -253,8 +260,10 @@ System.out.println("@@@ invoke beforeCheckpoint");
                 + protocol + "://" + host + ":" + port
                 + note + " in " + initializationElapsedTime + " milliseconds (since JVM startup).");
 
+        /*
+         *  Comment out for CRaC Custom
+         */
         // this is not needed at runtime, collect garbage
-        // ★
         //serverBuilder = null;
         //routingBuilder = null;
         //namedRoutings = null;
@@ -392,7 +401,9 @@ System.out.println("@@@ invoke beforeCheckpoint");
                     .get();
 
             started = false;
-            // ★
+            /*
+             *  Comment out for CRaC Custom
+             */
             //jerseySupports.forEach(JerseySupport::close);
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.log(Level.SEVERE, "Failed to stop web server", e);
